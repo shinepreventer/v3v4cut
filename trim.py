@@ -1,21 +1,18 @@
 # 这是一个用于处理测序数据的脚本
 # 作者：wzy
 # 日期：2023-04-04
-
-# 导入os模块，用于操作文件和目录
 import os
-# 导入logging模块，用于记录日志信息
-import logging
-# 导入biopython模块，用于处理测序数据
-from Bio import SeqIO
+import threading
+import queue
 
-# 定义常量，表示输入目录，输出目录和日志文件的路径
-INPUT_DIR = 'H:/v4test'
-OUTPUT_DIR = 'H:/v4test/v4new'
-LOG_FILE = 'H:/v4test/log.txt'
+input_dir = 'H:/v4test'
+output_dir = 'H:/v4test/v4new'
+log_file = 'H:/v4test/log.txt'
 
-# 定义常量，表示8个v4起始序列
-V4_START_CODES = [
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+v4_start_codes = [
     'GTGACAGCAGCCGCGGTAA',
     'GTGACAGCCGCCGCGGTAA',
     'GTGACAGCGGCCGCGGTAA',
@@ -25,59 +22,102 @@ V4_START_CODES = [
     'GTGCCAGCGGCCGCGGTAA',
     'GTGCCAGCTGCCGCGGTAA'
 ]
-# 定义一个函数，用于处理一个测序数据文件
-def process_file(filename):
-    # 使用os.path.join函数拼接输入文件和输出文件的完整路径
-    input_file = os.path.join(INPUT_DIR, filename)
-    output_file = os.path.join(OUTPUT_DIR, filename)
-    # 初始化移除的碱基数和保留的碱基数为0
-    removed_bp = 0
-    kept_bp = 0
-    # 使用biopython的SeqIO模块来读取和写入测序数据文件
-    with open(input_file, 'r') as input_handle:
-        with open(output_file, 'w') as output_handle:
-            # 遍历输入文件中的每一条记录，每条记录包含标识符，序列和质量分数
-            for record in SeqIO.parse(input_handle, 'fastq'):
-                # 获取序列字符串
-                seq = str(record.seq)
-                # 如果文件名以.2.fastq结尾，说明是反向测序数据，需要反转并互补序列
-                if filename.endswith('.2.fastq'):
-                    seq = str(record.reverse_complement().seq)
-                # 初始化v4起始位置为-1，表示没有找到
-                v4_start = -1
-                # 遍历8个v4起始序列，查找是否在序列中出现
-                for code in V4_START_CODES:
-                    v4_start = seq.find(code)
-                    # 如果找到了，就跳出循环
+
+complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+
+# Create a queue to store the files to be processed
+file_queue = queue.Queue()
+
+# Create a lock object to synchronize the access to the log file
+log_lock = threading.Lock()
+
+# Define a function to process each file
+def process_file():
+    # Get a file from the queue
+    file = file_queue.get()
+    # Open input and output files
+    with open(file.path, 'r') as input_file, open(os.path.join(output_dir, file.name), 'w') as output_file:
+        # Initialize counters for removed and kept bases
+        removed_bp = 0
+        kept_bp = 0
+        # Loop through each line in input file
+        for line in input_file:
+            # If line starts with @ or +, it contains header or quality score information
+            if line.startswith('@') or line.startswith('+'):
+                # Write line to output file without any modification
+                output_file.write(line)
+            # Otherwise, line contains sequence data
+            else:
+                # Remove any whitespace characters from line
+                seq = line.strip()
+                # If file name ends with .2.fastq, it is a reverse sequence
+                if file.name.endswith('.2.fastq'):
+                    # Reverse and complement the sequence using dictionary
+                    rev_seq = ''.join(complement.get(base, base) for base in reversed(seq))
+                    # Find the index of the first occurrence of any pattern in v4_start_codes
+                    v4_start = next((rev_seq.find(code) for code in v4_start_codes if rev_seq.find(code) != -1), -1)
+                    # If index is not -1, pattern is found
                     if v4_start != -1:
-                        break
-                # 如果找到了v4起始位置，就计算移除的碱基数和保留的碱基数，并将保留的部分写入输出文件
-                if v4_start != -1:
-                    removed_bp += v4_start
-                    kept_bp += len(seq) - v4_start
-                    output_handle.write(seq[v4_start:] + '\n')
-                # 否则，就将整个序列都算作移除的碱基数
+                        # Calculate how many bases are removed from end of sequence
+                        removed_bp += len(seq) - (v4_start + len(v4_start_codes[0]))
+                        # Calculate how many bases are kept from start of sequence
+                        kept_bp += v4_start + len(v4_start_codes[0])
+                        # Write only the kept part of sequence to output file, reversing and complementing it again
+                        output_file.write(''.join(complement.get(base, base) for base in reversed(rev_seq[v4_start:v4_start + len(v4_start_codes[0])])) + '\n')
+                    # If index is -1, pattern is not found
+                    else:
+                        # All bases are removed from sequence
+                        removed_bp += len(seq)
+                # If file name does not end with .2.fastq, it is a forward sequence
                 else:
-                    removed_bp += len(seq)
-    # 返回文件名，移除的碱基数和保留的碱基数
-    return filename, removed_bp, kept_bp
-    # 使用logging模块来配置日志信息的格式和级别，并指定日志文件的路径
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO, filename=LOG_FILE)
-# 在日志文件中写入表头，包含文件名，移除的碱基数和保留的碱基数
-logging.info('filename\tremoved_bp\tkept_bp')
-# 如果输出目录不存在，就创建它，并使用try-except语句来处理可能出现的异常，并在日志文件中记录异常信息
-try:
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
-    # 遍历输入目录下的所有文件
-    for filename in os.listdir(INPUT_DIR):
-        # 如果文件名以.fastq结尾，说明是测序数据文件
-        if filename.endswith('.fastq'):
-            # 使用process_file函数来处理文件，并获取返回的结果
-            filename, removed_bp, kept_bp = process_file(filename)
-            # 在日志文件中写入结果
-            logging.info(f'{filename}\t{removed_bp}\t{kept_bp}')
-except Exception as e:
-    # 如果出现异常，就在日志文件中记录异常信息，并打印到屏幕上
-    logging.error(e)
-    print(e)
+                    # Find the index of the first occurrence of any pattern in v4_start_codes
+                    v4_start = next((seq.find(code) for code in v4_start_codes if seq.find(code) != -1), -1)
+                    # If index is not -1, pattern is found
+                    if v4_start != -1:
+                        # Calculate how many bases are removed from start of sequence
+                        removed_bp += v4_start
+                        # Calculate how many bases are kept from end of sequence
+                        kept_bp += len(seq) - v4_start
+                        # Write only the kept part of sequence to output file
+                        output_file.write(seq[v4_start:] + '\n')
+                    # If index is -1, pattern is not found
+                    else:
+                        # All bases are removed from sequence
+                        removed_bp += len(seq)
+        # Acquire the lock before writing to log file
+        log_lock.acquire()
+ # Open the log file and write the file name and the counters
+        with open(log_file, 'a') as log:
+            log.write(f'{file.name}\t{removed_bp}\t{kept_bp}\n')
+        # Release the lock after writing to log file
+        log_lock.release()
+    # Indicate that the task is done
+    file_queue.task_done()
+
+# Create a list to store the threads
+threads = []
+
+# Define the number of threads to use
+num_threads = 8
+
+# Loop through the number of threads
+for i in range(num_threads):
+    # Create a thread that runs the process_file function
+    thread = threading.Thread(target=process_file)
+    # Add the thread to the list
+    threads.append(thread)
+    # Start the thread
+    thread.start()
+
+# Loop through all files in input directory
+for file in os.scandir(input_dir):
+    # Only process files that end with .fastq
+    if file.name.endswith('.fastq'):
+        # Put the file in the queue
+        file_queue.put(file)
+
+# Wait for the queue to be empty
+file_queue.join()
+
+# Print a message to indicate the code is done
+print('Code finished successfully.')
