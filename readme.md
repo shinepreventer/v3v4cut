@@ -42,4 +42,4 @@ conda install -c conda-forge biopython
 You may need to restart your python environment after installing BioPython module.
 
 
-##trim.py   This file does not contain a comparison of sequencing quality information before and after cut
+## trim.py   This file does not contain a comparison of sequencing quality information before and after cut
