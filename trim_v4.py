@@ -129,9 +129,6 @@ def process_file_pe(file_name_1, file_name_2, primer_1, primer_2):
     except Exception as e:
         # Log an error message for any other exception
         logger.error(f"An unexpected error occurred: {e}")
-
-# Create an argument parser object to get command line arguments
-parser = argparse.ArgumentParser(description="A script to
 # Create an argument parser object to get command line arguments
 parser = argparse.ArgumentParser(description="A script to trim 16sRDNA raw data (.fastq format) v4 region using cutadapt")
 # Add arguments for input file, output file, primer sequence, minimum average quality score and minimum sequence length
