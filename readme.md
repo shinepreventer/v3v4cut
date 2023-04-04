@@ -27,4 +27,4 @@ The script will process all the fastq files in the input directory, and write th
 
 
 
-## trim.py   This file does not contain a comparison of sequencing quality information before and after cut
+## trim.py   多线程版本，有bug！！！
