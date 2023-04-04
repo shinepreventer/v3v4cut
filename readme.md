@@ -23,23 +23,8 @@ You can also omit the arguments if you want to use the default values:
 python trim_v4.py
 ```
 
-The script will process all the fastq files in the input directory, and write the trimmed sequences to the output directory. It will also write the statistics of each file to the log file, such as the number of removed and kept base pairs, and the mean length and quality scores before and after trimming.
+The script will process all the fastq files in the input directory, and write the trimmed sequences to the output directory. It will also write the statistics of each file to the log file, such as the number of removed and kept base pairs before and after trimming.
 
-## Dependencies
-
-To run this script, you need to have Python 3.6 or higher installed on your system. You also need to install BioPython module, which can be done by using pip or conda command:
-
-```bash
-pip install biopython
-```
-
-or
-
-```bash
-conda install -c conda-forge biopython
-```
-
-You may need to restart your python environment after installing BioPython module.
 
 
 ## trim.py   This file does not contain a comparison of sequencing quality information before and after cut
