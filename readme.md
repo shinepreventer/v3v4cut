@@ -1,30 +1,28 @@
-~~~markdown
-# Sequencing Data Processing Script
+# 16SrDNA测序v4区裁剪脚本
 
-This is a python script for processing sequencing data files in fastq format. It can trim the sequences based on the V4 start codes, and calculate and output the sequencing quality and base pair counts before and after trimming.
+这是一个用python写的脚本，用于从16SrDNA测序（v3v4区）的下机文件原始序列中提取出v4区部分，并保留原始信息和正常的格式，使其可以导入qiime2进行后续的分析。
 
-## Usage
+## 依赖
 
-To use this script, you need to provide three arguments: input_dir, output_dir and log_file. The input_dir is the directory that contains the fastq files to be processed. The output_dir is the directory that will store the trimmed fastq files. The log_file is the file that will record the statistics of the processing. You can also use the default values for these arguments, which are:
+- python 3.7或更高版本
+- cutadapt 4.3或更高版本
+- os模块
 
-- input_dir: H:/v4test
-- output_dir: H:/v4test/v4new
-- log_file: H:/v4test/log.txt
+## 使用方法
 
-To run the script, you can use the following command:
+1. 将您的原始文件放在/media/wzy/work/v4test目录下，确保它们是fastq格式。
+2. 修改脚本中的引物序列，以匹配您的实验设计。
+3. 运行脚本：python v4_trim.py
+4. 检查输出文件和log文件，它们将被保存在/media/wzy/work/v4test/v4new目录下。
+5. 将输出文件导入qiime2进行后续的分析。
 
-```bash
-python trim_v4.py --input_dir H:/v4test --output_dir H:/v4test/v4new --log_file H:/v4test/log.txt
-~~~
+## 注意事项
 
-You can also omit the arguments if you want to use the default values:
+- 本脚本只适用于双端或双端合并后的文件类型，如果您有其他类型的文件，请自行修改或联系作者。
+- 本脚本使用cutadapt软件来实现序列裁剪功能，如果您没有安装cutadapt，请先安装它。
+- 本脚本没有进行任何质量控制或过滤操作，如果您需要对您的数据进行进一步的处理，请在运行本脚本之前或之后自行完成。
+- 本脚本没有进行任何错误处理或异常处理，如果您遇到任何问题，请检查您的输入文件和参数是否正确，或者联系作者。
 
-```bash
-python trim_v4.py
-```
+## 联系方式
 
-The script will process all the fastq files in the input directory, and write the trimmed sequences to the output directory. It will also write the statistics of each file to the log file, such as the number of removed and kept base pairs before and after trimming.
-
-
-
-## trim.py   多线程版本，有bug！！！
+如果您有任何问题、建议或反馈，请发送邮件至wzyttkx@gmail.com，谢谢！
