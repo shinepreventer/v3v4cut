@@ -12,7 +12,7 @@
 
 1. 将您的原始文件放在/media/wzy/work/v4test目录下，确保它们是fastq格式。
 2. 修改脚本中的引物序列，以匹配您的实验设计。
-3. 运行脚本：python v4_trim.py
+3. 运行脚本：trim.py
 4. 检查输出文件和log文件，它们将被保存在/media/wzy/work/v4test/v4new目录下。
 5. 将输出文件导入qiime2进行后续的分析。
 
@@ -22,6 +22,7 @@
 - 本脚本使用cutadapt软件来实现序列裁剪功能，如果您没有安装cutadapt，请先安装它。
 - 本脚本没有进行任何质量控制或过滤操作，如果您需要对您的数据进行进一步的处理，请在运行本脚本之前或之后自行完成。
 - 本脚本没有进行任何错误处理或异常处理，如果您遇到任何问题，请检查您的输入文件和参数是否正确，或者联系作者。
+- cutadapt安装请参考https://cutadapt.readthedocs.io/en/stable/installation.html
 
 ## 联系方式
 
