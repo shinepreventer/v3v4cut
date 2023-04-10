@@ -42,14 +42,14 @@ for file in os.listdir(input_dir):
         input_file = os.path.join(input_dir, file)
         output_file = os.path.join(output_dir, file)
         # 如果文件名包含_1，说明是双端文件的第一个文件
-        if "_R1" in file:
+        if "_1" in file:
             # 构造另一个输入文件和输出文件的完整路径，将_1替换为_2
-            input_file2 = input_file.replace("_R1", "_R2")
-            output_file2 = output_file.replace("_R1", "_R2")
+            input_file2 = input_file.replace("_1", "_2")
+            output_file2 = output_file.replace("_1", "_2")
             # 构造cutadapt命令，指定正向和反向引物序列，以及另一个输出文件
             cutadapt_command = f"cutadapt -g {forward_primer} -o {output_file} {input_file} --report minimal"
         # 如果文件名包含_2，说明是双端文件的第二个文件
-        elif "_R2" in file:
+        elif "_2" in file:
             # 构造cutadapt命令，只指定反向引物序列
             cutadapt_command = f"cutadapt -a {reverse_primer} -o {output_file} {input_file} --report minimal"
         # 否则，调用函数判断文件类型
