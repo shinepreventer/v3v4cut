@@ -46,22 +46,22 @@ for file in os.listdir(input_dir):
             # 构造另一个输入文件和输出文件的完整路径，将_1替换为_2
             input_file2 = input_file.replace("_1", "_2")
             output_file2 = output_file.replace("_1", "_2")
-            # 构造cutadapt命令，指定正向和反向引物序列，以及另一个输出文件
-            cutadapt_command = f"cutadapt -g {forward_primer} -o {output_file} {input_file} --report minimal"
+            # 构造cutadapt命令，指定正向和反向引物序列，以及另一个输出文件  -m 10为去除切除后小于10bp的序列
+            cutadapt_command = f"cutadapt -g {forward_primer} -o {output_file} {input_file} -m 10 --report minimal"
         # 如果文件名包含_2，说明是双端文件的第二个文件
         elif "_2" in file:
             # 构造cutadapt命令，只指定反向引物序列
-            cutadapt_command = f"cutadapt -a {reverse_primer} -o {output_file} {input_file} --report minimal"
+            cutadapt_command = f"cutadapt -a {reverse_primer} -o {output_file} {input_file} -m 10 --report minimal"
         # 否则，调用函数判断文件类型
         else:
             file_type = check_file_type(input_file)
             # 如果是双端合并后的文件
             if file_type == "paired":
                 # 构造cutadapt命令，指定正向和反向引物序列
-                cutadapt_command = f"cutadapt -g {forward_primer} -a {reverse_primer} -o {output_file} {input_file} --report minimal"
+                cutadapt_command = f"cutadapt -g {forward_primer} -a {reverse_primer} -o {output_file} {input_file} -m 10 --report minimal"
             # 如果是单独的左端文件
             elif file_type == "single":
                 # 构造cutadapt命令，只指定正向引物序列
-                cutadapt_command = f"cutadapt -g {forward_primer} -o {output_file} {input_file} --report minimal"
+                cutadapt_command = f"cutadapt -g {forward_primer} -o {output_file} {input_file} -m 10 --report minimal"
         # 执行cutadapt命令，并将输出重定向到log文件中
         os.system(cutadapt_command + f" >> {output_dir}/log.txt")
